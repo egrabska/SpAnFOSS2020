@@ -1,2 +1,2 @@
 # SpAnFOSS2020
-Opis do warsztatów Senitne-2 w R
+Opis do warsztatów Senitnel-2 w R
