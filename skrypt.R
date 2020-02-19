@@ -1,3 +1,12 @@
+#Instalacja i wczytywanie pakietÃ³w
+packages = c("raster", "RStoolbox", "sf", "ggplot2", "dplyr", "caTools",
+          "reshape2", "randomForest", "VSURF", "caret")
+
+install.packages(packages)
+
+
+?c
+#Wczytywanie - library() lub require()
 library(raster)
 library(RStoolbox)
 library(sf)
@@ -6,8 +15,11 @@ library(ggplot2)
 library(dplyr)
 library(caTools)
 library(reshape2)
+#LUB
+lapply(packages, require, character.only = TRUE)
 
 
+#Ustawianie katalogu roboczego z naszymi danymi
 setwd("D:/09_Dydaktyka/warsztaty_spanfoss/dane")
 list.files()
 list.files(pattern = "*.tif$")
@@ -18,7 +30,7 @@ plot(img1, col = gray(0:100 / 100))
 plotRGB(img1, r =3, g=2, b=1, stretch = "lin")
 
 
-#funckja pairs() - ró¿ne kombinacje
+#funckja pairs() - rÃ³Â¿ne kombinacje
 hist(img1[[1]])
 pairs(img1)
 pairs(img1[[c(3,10)]])
@@ -27,7 +39,7 @@ pairs(img1[[4:5]], main = "Red-edge1 versus red-edge2")
 pairs(img1[[5:6]], main = "Red-edge2 versus red-edge3")
 
 
-#analiza hotspostów na obrazie z po¿arem
+#analiza hotspostÃ³w na obrazie z poÂ¿arem
 img2 = stack("c20190423.tif")
 plot(img2, col = gray(0:100 / 100))
 plotRGB(img2, r =3, g=2, b=1, stretch = "lin")
@@ -41,7 +53,7 @@ ref1 = readOGR("D:/09_Dydaktyka/warsztaty_spanfoss/dane/reference.shp", pointDro
 ref2 = shapefile("D:/09_Dydaktyka/warsztaty_spanfoss/dane/reference.shp")
 ref3 = st_read("D:/09_Dydaktyka/warsztaty_spanfoss/dane/reference.shp")
 
-#jakie s¹ klasy tych obiektów?
+#jakie sÂ¹ klasy tych obiektÃ³w?
 class(ref3)
 
 
@@ -58,7 +70,7 @@ pairs(ref_val)
 ggplot(ref_val, aes(blue, nir1, color = class))+
   geom_point(size = 3)
 
-#przekstza³cenie data frame 
+#przekstzaÂ³cenie data frame 
 ref_class_melt = melt(ref_val)
 ref_class_melt
 
@@ -95,11 +107,11 @@ NBR = function(obraz){
 }
 
 
-#zapisywanie wyników na dysku
+#zapisywanie wynikÃ³w na dysku
 writeRaster()
 
 
-#CZÊŒÆ 2 -  analiza sk³adu gatunkowego i klasyfikacja
+#CZÃŠÅ’Ã† 2 -  analiza skÂ³adu gatunkowego i klasyfikacja
 setwd("D:/09_Dydaktyka/warsztaty_spanfoss/dane")
 list.files(pattern = "*.tif$")
 
@@ -111,7 +123,7 @@ las3 = stack(lip_las, maj_las, paz_las)
 
 gatunki = st_read("ref_gatunki.shp")
 
-#analiza wartoœci spektralnych 
+#analiza wartoÅ“ci spektralnych 
 
 pts_gat = gatunki %>% 
   st_sample(rep(10, nrow(gatunki)), type = 'random') %>% 
@@ -125,15 +137,15 @@ pairs(pts_values[-11])
 names(pts_values) = c("blue", "green", "red", "re1", "re2", "re3", "nir1", "nir2", "swir1", "swir2", "gatunek")
 
 
-#zwyk³y scatterplot
+#zwykÂ³y scatterplot
 ggplot(pts_values, aes(swir1, re1, color = gatunek))+
   geom_point()+
   stat_ellipse(size=1.5)
 
-#aby policzyæ œrednie wartoœci odbicia dla gatunków (mamy dla osobnych, losowych punktów) - musimy zamieniæ df uzywaj¹c melt
+#aby policzyÃ¦ Å“rednie wartoÅ“ci odbicia dla gatunkÃ³w (mamy dla osobnych, losowych punktÃ³w) - musimy zamieniÃ¦ df uzywajÂ¹c melt
 pts_melt = melt(pts_values)
 
-#a nastêpnie policzyæ œredni¹ - grupuj¹c po gatunki i kanale
+#a nastÃªpnie policzyÃ¦ Å“redniÂ¹ - grupujÂ¹c po gatunki i kanale
 sr_gatunki = summarise(group_by(pts_melt, gatunek, variable), srednia = mean(value, na.rm = TRUE))
 sr_gatunki
 
@@ -143,8 +155,8 @@ ggplot(sr_gatunki, aes(variable, srednia, color = gatunek, group = gatunek))+
   geom_line(size=1.5, alpha = 0.7)
 
 
-#KLASYFIKACJA - podzia³ danych referencyjnych na trening i walidacjê
-set.seed(123) #set.seed zapewnia zawsze ten sam randomowy podzia³ 
+#KLASYFIKACJA - podziaÂ³ danych referencyjnych na trening i walidacjÃª
+set.seed(123) #set.seed zapewnia zawsze ten sam randomowy podziaÂ³ 
 split = sample.split(gatunki$species_cd, 0.7)
 training_set = subset(gatunki, split == TRUE)
 validation_set = subset(gatunki, split == FALSE)
@@ -156,15 +168,15 @@ end_time = Sys.time()
 end_time - start_time
 klasyfikacja
 
-#dok³adnoœæ
+#dokÂ³adnoÅ“Ã¦
 klasyfikacja
 
-#zapisywanie rastrów
+#zapisywanie rastrÃ³w
 writeRaster(klasyfikacja$map, "klasyfikacjaSVMall.tif")
 
 
 #--------------feature selection/reduction techniques------------------
-#losowe punkty - tak jak wczeœniej (tylko mniej)
+#losowe punkty - tak jak wczeÅ“niej (tylko mniej)
 pts = gatunki %>% 
   st_sample(rep(2, nrow(gatunki)), type = 'random') %>% 
   st_sf() %>%
@@ -172,7 +184,7 @@ pts = gatunki %>%
 
 pts_values = extract(las3, pts) %>% as.data.frame()
 
-#podstawienie kolumny z klasami gatunków 
+#podstawienie kolumny z klasami gatunkÃ³w 
 pts_values$species = pts$species_cd
 pts_values = pts_values[complete.cases(pts_values),]
 
@@ -187,7 +199,7 @@ imp
 varImpPlot(rf)
 
 library(VSURF)
-#VSURF liczy siê trochê d³ugo
+#VSURF liczy siÃª trochÃª dÂ³ugo
 vsurf = VSURF(species~., pts_values)
 summary(vsurf)
 plot(vsurf)
@@ -212,7 +224,7 @@ pred= predictors(results)
 
 
 
-#Jakie s¹ najwa¿niejsze kana³y? zróbmy klasyfikacjê na najwazniejszych
+#Jakie sÂ¹ najwaÂ¿niejsze kanaÂ³y? zrÃ³bmy klasyfikacjÃª na najwazniejszych
 
 imp10 = all_las[[pred]]
 imp_vsurf = all_las[[inter]]
